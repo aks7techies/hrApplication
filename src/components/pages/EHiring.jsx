@@ -1,5 +1,5 @@
-import React, {useState} from "react";
-import {Formik, Form, Field, ErrorMessage} from "formik";
+import React, { useState } from "react";
+import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import Header from "../../layouts/header/Header";
 import dayjs from "dayjs";
@@ -8,15 +8,13 @@ import {
   Card,
   CardActions,
   CardContent,
-  Divider,
   Grid,
   TextField,
   Typography,
 } from "@mui/material";
-import {DemoContainer} from "@mui/x-date-pickers/internals/demo";
-import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
-import {LocalizationProvider} from "@mui/x-date-pickers/LocalizationProvider";
-import {DatePicker} from "@mui/x-date-pickers/DatePicker";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
 import FormControl from "@mui/material/FormControl";
@@ -25,11 +23,12 @@ import "./allPages.css";
 import Progress from "../../layouts/stepper/Progress";
 import Modal from "@mui/material/Modal";
 import Box from "@mui/material/Box";
-import {useDispatch} from "react-redux";
-import {decrement, increment} from "../../radux/slices/UpdateStagesStepper";
-import {useNavigate} from "react-router-dom";
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { useDispatch } from "react-redux";
+import { decrement, increment } from "../../radux/slices/UpdateStagesStepper";
+import { useNavigate } from "react-router-dom";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 const validationSchema = Yup.object({
   firstName: Yup.string().required("First Name is Required"),
   middleName: Yup.string(),
@@ -64,6 +63,12 @@ const style = {
   p: 4,
 };
 
+const positionRequirements = {
+  CFO: 10,
+  ASG: 5,
+  SG: 5,
+};
+
 const EHiring = () => {
   const [open, setOpen] = useState(true);
   const [modalSubmitted, setModalSubmitted] = useState(false);
@@ -72,39 +77,40 @@ const EHiring = () => {
     ASG: false,
     SG: false,
   });
+  const [dob, setDob] = useState(null);
+  const [appliedPositions, setAppliedPositions] = useState([]);
   const dispatch = useDispatch();
-  const Navigation = useNavigate();
+  const navigate = useNavigate();
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
-  const initialValues = {
-    firstName: "",
-    middleName: "",
-    lastName: "",
-    dob: null,
-    fatherName: "",
-    gender: "",
-    state: "",
-    city: "",
-    district: "",
-    pincode: "",
-    email: "",
-    mobileNo: "",
-    communicationAddress: "",
+  const handleDateChange = (date) => {
+    setDob(date);
+    if (date) {
+      // Calculate age
+      const age = dayjs().diff(dayjs(date), "year");
+
+      // Determine eligibility for each selected position
+      const eligibility = Object.entries(selectedPositions)
+        .filter(([position, isSelected]) => isSelected)
+        .map(([position]) => ({
+          position,
+          isEligible: age >= positionRequirements[position],
+        }));
+
+      setAppliedPositions(eligibility);
+    }
   };
 
   const handleSubmit = (values) => {
-    // Handle form submission here
-
-    console.log(values);
     toast.success("Data Save Successfully", {
       position: "top-right",
     });
-    dispatch(increment());
+
     setTimeout(() => {
-      Navigation("/academic-qualification");
-      
+      dispatch(increment());
+      navigate("/academic-qualification");
     }, 5000);
   };
 
@@ -116,7 +122,7 @@ const EHiring = () => {
   };
 
   const handleCheckboxChange = (event) => {
-    const {name, checked} = event.target;
+    const { name, checked } = event.target;
     setSelectedPositions((prevState) => ({
       ...prevState,
       [name]: checked,
@@ -125,7 +131,7 @@ const EHiring = () => {
 
   return (
     <>
-    <ToastContainer/>
+      <ToastContainer />
       <Header />
       <Progress />
       <Modal
@@ -133,40 +139,24 @@ const EHiring = () => {
         onClose={handleClose}
         aria-labelledby="modal-modal-title"
         aria-describedby="modal-modal-description"
-        BackdropProps={{onClick: (e) => e.stopPropagation()}}
+        BackdropProps={{ onClick: (e) => e.stopPropagation() }}
       >
         <Box sx={style}>
           <Typography id="modal-modal-title" variant="h6" component="h2">
             Applying For:
           </Typography>
-          <div style={{lineHeight: "2rem"}}>
-            <div>
-              <input
-                type="checkbox"
-                name="CFO"
-                checked={selectedPositions.CFO}
-                onChange={handleCheckboxChange}
-              />
-              <label>CFO (Min. Experience 10 Years)</label>
-            </div>
-            <div>
-              <input
-                type="checkbox"
-                name="ASG"
-                checked={selectedPositions.ASG}
-                onChange={handleCheckboxChange}
-              />
-              <label>ASG (Min. Experience 5 Years)</label>
-            </div>
-            <div>
-              <input
-                type="checkbox"
-                name="SG"
-                checked={selectedPositions.SG}
-                onChange={handleCheckboxChange}
-              />
-              <label>SG (Min. Experience 5 Years)</label>
-            </div>
+          <div style={{ lineHeight: "2rem" }}>
+            {Object.keys(selectedPositions).map((position) => (
+              <div key={position}>
+                <input
+                  type="checkbox"
+                  name={position}
+                  checked={selectedPositions[position]}
+                  onChange={handleCheckboxChange}
+                />
+                <label>{`${position} (Min. Experience ${positionRequirements[position]} Years)`}</label>
+              </div>
+            ))}
           </div>
           <div className="d-flex justify-content-end">
             <Button
@@ -181,7 +171,7 @@ const EHiring = () => {
         </Box>
       </Modal>
       {modalSubmitted && (
-        <section className="py-4" style={{background: "#f0f2f8"}}>
+        <section className="py-4" style={{ background: "#f0f2f8" }}>
           <div className="mb-3 container">
             <div className="row justify-content-center">
               <div className="col-md-10">
@@ -192,7 +182,21 @@ const EHiring = () => {
                     </Typography>
 
                     <Formik
-                      initialValues={initialValues}
+                      initialValues={{
+                        firstName: "",
+                        middleName: "",
+                        lastName: "",
+                        dob: null,
+                        fatherName: "",
+                        gender: "",
+                        state: "",
+                        city: "",
+                        district: "",
+                        pincode: "",
+                        email: "",
+                        mobileNo: "",
+                        communicationAddress: "",
+                      }}
                       validationSchema={validationSchema}
                       onSubmit={handleSubmit}
                     >
@@ -239,26 +243,24 @@ const EHiring = () => {
                             </Grid>
                             <Grid item xs={12} sm={4}>
                               <LocalizationProvider dateAdapter={AdapterDayjs}>
-                                <DemoContainer components={["DatePicker"]}>
-                                  <DatePicker
-                                    label="Date Of Birth"
-                                    maxDate={dayjs()}
-                                    value={null} // default value
-                                    onChange={(date) => {
-                                      setFieldValue("dob", date);
-                                      setFieldTouched("dob", true);
-                                    }} // Formik's setFieldValue to update the field value
-                                    renderInput={(params) => (
-                                      <TextField
-                                        {...params}
-                                        name="dob"
-                                        error={
-                                          touched.dob && Boolean(errors.dob)
-                                        }
-                                      />
-                                    )}
-                                  />
-                                </DemoContainer>
+                                <DatePicker
+                                  label="Date Of Birth"
+                                  maxDate={dayjs()}
+                                  className="mt-2"
+                                  value={dob}
+                                  onChange={(date) => {
+                                    setFieldValue("dob", date);
+                                    setFieldTouched("dob", true);
+                                    handleDateChange(date);
+                                  }}
+                                  renderInput={(params) => (
+                                    <TextField
+                                      {...params}
+                                      name="dob"
+                                      error={touched.dob && Boolean(errors.dob)}
+                                    />
+                                  )}
+                                />
                               </LocalizationProvider>
                               <ErrorMessage
                                 name="dob"
@@ -268,6 +270,7 @@ const EHiring = () => {
                             </Grid>
                             <Grid item xs={12} sm={4}>
                               <Field
+                                className="mt-2"
                                 as={TextField}
                                 name="fatherName"
                                 label="Father Name"
@@ -282,10 +285,9 @@ const EHiring = () => {
                             </Grid>
                             <Grid item xs={12} sm={4}>
                               <FormControl fullWidth>
-                                <InputLabel id="gender-label">
-                                  Gender
-                                </InputLabel>
+                                <InputLabel id="gender-label">Gender</InputLabel>
                                 <Field
+                                  className="mt-2"
                                   as={Select}
                                   labelId="gender-label"
                                   id="gender"
@@ -304,11 +306,43 @@ const EHiring = () => {
                                 className="error text-danger"
                               />
                             </Grid>
-                            <hr />
                             <Grid item xs={12} sm={12}>
-                              <Typography variant="h5" className="">
-                                Mailing Address Details
-                              </Typography>
+                              <table className="table">
+                                <thead>
+                                  <tr>
+                                    <th>S no.</th>
+                                    <th>Apply for</th>
+                                    <th>Your Age</th>
+                                    <th>Age Requirement</th>
+                                    <th>Eligibility</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {appliedPositions.map((position, index) => (
+                                    <tr key={index}>
+                                      <td>{index + 1}</td>
+                                      <td>{position.position}</td>
+                                      <td>{dayjs().diff(dob, 'year')} years</td>
+                                      <td>{positionRequirements[position.position]} years</td>
+                                      <td
+                                        style={{
+                                          color: position.isEligible
+                                            ? "green"
+                                            : "red",
+                                          fontWeight: "600",
+                                        }}
+                                      >
+                                        {position.isEligible
+                                          ? "You are eligible for this post"
+                                          : "Not Eligible"}
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </Grid>
+                            <Grid item xs={12}>
+                              <Typography variant="h5">Mailing Address Details</Typography>
                             </Grid>
                             <Grid item xs={12} sm={4}>
                               <FormControl fullWidth>
@@ -348,9 +382,7 @@ const EHiring = () => {
                             </Grid>
                             <Grid item xs={12} sm={4}>
                               <FormControl fullWidth>
-                                <InputLabel id="district-label">
-                                  District
-                                </InputLabel>
+                                <InputLabel id="district-label">District</InputLabel>
                                 <Field
                                   as={Select}
                                   labelId="district-label"
@@ -359,15 +391,9 @@ const EHiring = () => {
                                   label="District"
                                 >
                                   <MenuItem value="">Select</MenuItem>
-                                  <MenuItem value="District 1">
-                                    District 1
-                                  </MenuItem>
-                                  <MenuItem value="District 2">
-                                    District 2
-                                  </MenuItem>
-                                  <MenuItem value="District 3">
-                                    District 3
-                                  </MenuItem>
+                                  <MenuItem value="District 1">District 1</MenuItem>
+                                  <MenuItem value="District 2">District 2</MenuItem>
+                                  <MenuItem value="District 3">District 3</MenuItem>
                                 </Field>
                               </FormControl>
                               <ErrorMessage
@@ -421,7 +447,7 @@ const EHiring = () => {
                                 className="error text-danger"
                               />
                             </Grid>
-                            <Grid item xs={12} sm={12}>
+                            <Grid item xs={12}>
                               <Field
                                 as={TextField}
                                 name="communicationAddress"
@@ -437,12 +463,8 @@ const EHiring = () => {
                               />
                             </Grid>
                           </Grid>
-                          <CardActions style={{justifyContent: "flex-end"}}>
-                            <Button
-                              variant="contained"
-                              type="submit"
-                              disabled={!isValid}
-                            >
+                          <CardActions style={{ justifyContent: "flex-end" }}>
+                            <Button variant="contained" type="submit" disabled={!isValid}>
                               Save & Next
                             </Button>
                           </CardActions>

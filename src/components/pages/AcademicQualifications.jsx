@@ -1,5 +1,6 @@
-import React, {useState} from "react";
-import {Formik, Form, Field, ErrorMessage} from "formik";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import Header from "../../layouts/header/Header";
 import Progress from "../../layouts/stepper/Progress";
@@ -11,13 +12,17 @@ import {
   TextField,
   Button,
 } from "@mui/material";
-import {DemoContainer} from "@mui/x-date-pickers/internals/demo";
-import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
-import {LocalizationProvider, DatePicker} from "@mui/x-date-pickers";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
 import "../pages/allPages.css";
-import {styled} from "@mui/material/styles";
+import { styled } from "@mui/material/styles";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import DeleteIcon from "@mui/icons-material/Delete";
+import { useDispatch } from "react-redux";
+import { decrement, increment } from "../../radux/slices/UpdateStagesStepper";
 
 const initialValues = {
   degree: "",
@@ -26,7 +31,7 @@ const initialValues = {
   NameofInstitute: "",
   CGPA_Rank_Divn_Equivalent: "",
   Board_or_University: "",
-  uploadedFileName: "", // New state for uploaded file name
+  uploadedFileName: "",
 };
 
 const validationSchema = Yup.object({
@@ -36,12 +41,8 @@ const validationSchema = Yup.object({
   NameofInstitute: Yup.string().required("Required"),
   CGPA_Rank_Divn_Equivalent: Yup.string().required("Required"),
   Board_or_University: Yup.string().required("Required"),
-  uploadedFileName: Yup.string().required("File upload is required"), // Added validation for uploadedFileName
+  uploadedFileName: Yup.string().required("File upload is required"),
 });
-
-const handleSubmit = (values) => {
-  console.log(values);
-};
 
 const VisuallyHiddenInput = styled("input")({
   clip: "rect(0 0 0 0)",
@@ -56,18 +57,50 @@ const VisuallyHiddenInput = styled("input")({
 });
 
 const AcademicQualifications = () => {
-  const [uploadedFileName, setUploadedFileName] = useState(""); // State for uploaded file name
+  const [submittedData, setSubmittedData] = useState([]);
+  const [isDataSubmitted, setIsDataSubmitted] = useState(false); // State to track whether data is submitted
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-  const handleFileChange = (event) => {
+  const handleFileChange = (event, setFieldValue) => {
     const file = event.target.files[0];
-    setUploadedFileName(file ? file.name : "");
+    setFieldValue("uploadedFileName", file ? file.name : "");
+  };
+
+  const handleSubmit = (values, { resetForm }) => {
+    console.log(values);
+    toast.success("Qualification Added Successfully", {
+      position: "top-right",
+    });
+    setSubmittedData((prevData) => [...prevData, values]);
+    resetForm();
+    setIsDataSubmitted(true); // Data is submitted, so set the flag to true
+  };
+
+  const handleDelete = (index) => {
+    setSubmittedData(submittedData.filter((_, i) => i !== index));
+    toast.success("Data Deleted Successfully", {
+      position: "top-right",
+    });
+    setIsDataSubmitted(submittedData.length > 1); // Check if there is still data after deletion
+  };
+
+  const handleSaveAndNext = () => {
+    dispatch(increment());
+    navigate("/work-Experience"); // Replace "/next-page" with your actual next page route
+  };
+
+  const handleBackClick = () => {
+    dispatch(decrement());
+    navigate("/form-fill");
   };
 
   return (
     <>
+      <ToastContainer />
       <Header />
       <Progress />
-      <section className="py-4" style={{background: "#f0f2f8"}}>
+      <section className="py-4" style={{ background: "#f0f2f8" }}>
         <div className="mb-3 container">
           <div className="row justify-content-center">
             <div className="col-md-10">
@@ -82,7 +115,7 @@ const AcademicQualifications = () => {
                     validationSchema={validationSchema}
                     onSubmit={handleSubmit}
                   >
-                    {({touched, errors}) => (
+                    {({ touched, errors, setFieldValue, setFieldTouched, values }) => (
                       <Form>
                         <Grid container spacing={3} className="mb-3">
                           <Grid item xs={12} sm={4}>
@@ -108,43 +141,36 @@ const AcademicQualifications = () => {
                               variant="outlined"
                               fullWidth
                               multiline
-                              error={
-                                touched.specialization &&
-                                Boolean(errors.specialization)
-                              }
-                              helperText={
-                                touched.specialization && errors.specialization
-                              }
+                              error={touched.specialization && Boolean(errors.specialization)}
+                              helperText={touched.specialization && errors.specialization}
                             />
                           </Grid>
                           <Grid item xs={12} sm={4}>
                             <LocalizationProvider dateAdapter={AdapterDayjs}>
-                              <DemoContainer components={["DatePicker"]}>
-                                <Field name="yop" key="yop">
-                                  {({field, form}) => (
-                                    <DatePicker
-                                      label="Year Of Passing"
-                                      className="mt-2"
-                                      maxDate={dayjs()}
-                                      value={field.value}
-                                      onChange={(date) => {
-                                        form.setFieldValue("yop", date);
-                                        form.setFieldTouched("yop", true);
-                                      }}
-                                      renderInput={(params) => (
-                                        <TextField
-                                          {...params}
-                                          error={
-                                            touched.yop && Boolean(errors.yop)
-                                          }
-                                          helperText={touched.yop && errors.yop}
-                                          InputProps={{style: {paddingTop: 0}}}
-                                        />
-                                      )}
-                                    />
-                                  )}
-                                </Field>
-                              </DemoContainer>
+                              <Field name="yop">
+                                {({ field, form }) => (
+                                  <DatePicker
+                                    label="Year Of Passing"
+                                    className="mt-2"
+                                    maxDate={dayjs()}
+                                    value={field.value}
+                                    onChange={(date) => {
+                                      setFieldValue("yop", date);
+                                      setFieldTouched("yop", true);
+                                    }}
+                                    renderInput={(params) => (
+                                      <TextField
+                                        {...params}
+                                        error={touched.yop && Boolean(errors.yop)}
+                                        helperText={touched.yop && errors.yop}
+                                        InputProps={{
+                                          style: { paddingTop: 0 },
+                                        }}
+                                      />
+                                    )}
+                                  />
+                                )}
+                              </Field>
                             </LocalizationProvider>
                             <ErrorMessage
                               name="yop"
@@ -162,14 +188,8 @@ const AcademicQualifications = () => {
                               variant="outlined"
                               fullWidth
                               multiline
-                              error={
-                                touched.NameofInstitute &&
-                                Boolean(errors.NameofInstitute)
-                              }
-                              helperText={
-                                touched.NameofInstitute &&
-                                errors.NameofInstitute
-                              }
+                              error={touched.NameofInstitute && Boolean(errors.NameofInstitute)}
+                              helperText={touched.NameofInstitute && errors.NameofInstitute}
                             />
                           </Grid>
                           <Grid item xs={12} sm={4}>
@@ -182,14 +202,8 @@ const AcademicQualifications = () => {
                               variant="outlined"
                               fullWidth
                               multiline
-                              error={
-                                touched.CGPA_Rank_Divn_Equivalent &&
-                                Boolean(errors.CGPA_Rank_Divn_Equivalent)
-                              }
-                              helperText={
-                                touched.CGPA_Rank_Divn_Equivalent &&
-                                errors.CGPA_Rank_Divn_Equivalent
-                              }
+                              error={touched.CGPA_Rank_Divn_Equivalent && Boolean(errors.CGPA_Rank_Divn_Equivalent)}
+                              helperText={touched.CGPA_Rank_Divn_Equivalent && errors.CGPA_Rank_Divn_Equivalent}
                             />
                           </Grid>
                           <Grid item xs={12} sm={4}>
@@ -202,45 +216,38 @@ const AcademicQualifications = () => {
                               variant="outlined"
                               fullWidth
                               multiline
-                              error={
-                                touched.Board_or_University &&
-                                Boolean(errors.Board_or_University)
-                              }
-                              helperText={
-                                touched.Board_or_University &&
-                                errors.Board_or_University
-                              }
+                              error={touched.Board_or_University && Boolean(errors.Board_or_University)}
+                              helperText={touched.Board_or_University && errors.Board_or_University}
                             />
                           </Grid>
                           <Grid item xs={12} sm={6}>
                             <Typography variant="body1">
-                              Upload – Degree/Certificate/Marksheet (pdf, jpg,
-                              jpeg, png)
+                              Upload – Degree/Certificate/Marksheet (pdf, jpg, jpeg, png)
                             </Typography>
                           </Grid>
                           <Grid item xs={12} sm={3}>
                             <Button
                               component="label"
-                              role="button"
                               variant="contained"
                               startIcon={<CloudUploadIcon />}
                             >
                               Upload file
-                              <input
+                              <VisuallyHiddenInput
                                 type="file"
-                                style={{display: "none"}}
-                                onChange={handleFileChange}
-                                name="fileupload"
-                              />
-                              <ErrorMessage
-                                name="uploadfilename"
-                                component="div"
-                                className="error text-danger"
+                                onChange={(event) =>
+                                  handleFileChange(event, setFieldValue)
+                                }
+                                name="uploadedFile"
                               />
                             </Button>
+                            <ErrorMessage
+                              name="uploadedFileName"
+                              component="div"
+                              className="error text-danger"
+                            />
                           </Grid>
-                          <Grid item xs={12} sm={2}>
-                            <Typography>{uploadedFileName}</Typography>
+                          <Grid item xs={12} sm={3}>
+                            <Typography>{values.uploadedFileName}</Typography>
                           </Grid>
                         </Grid>
                         <div className="d-flex justify-content-end">
@@ -269,16 +276,16 @@ const AcademicQualifications = () => {
               <Card variant="outlined">
                 <CardContent>
                   <Typography variant="h6" className="mb-4 mt-2">
-                    Academic Qualificcation
+                    Academic Qualifications
                   </Typography>
                 </CardContent>
-                <table class="table">
-                  <thead class="table-light">
+                <table className="table">
+                  <thead className="table-light">
                     <tr>
                       <th scope="col">#</th>
                       <th scope="col">Degree</th>
                       <th scope="col">Specialization</th>
-                      <th scope="col">year of Passing</th>
+                      <th scope="col">Year of Passing</th>
                       <th scope="col">Name Of Institute</th>
                       <th scope="col">CGPA/ Rank/ Divn/ Equivalent</th>
                       <th scope="col">Upload – Degree/Certificate/Marksheet</th>
@@ -286,35 +293,41 @@ const AcademicQualifications = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    <tr>
-                      <th  style={{ padding:'10px' }} scope="row">1</th>
-                      <td style={{ padding:'10px' }}>Mark</td>
-                      <td style={{ padding:'10px' }}>Otto</td>
-                      <td style={{ padding:'10px' }}>@mdo</td>
-                      <td style={{ padding:'10px' }}>@mdo</td>
-                      <td style={{ padding:'10px' }}>@mdo</td>
-                      <td style={{ padding:'10px' }}>@mdo</td>
-                      <td style={{ padding:'10px' }}>@mdo</td>
-                    </tr>
-                    <tr>
-                    <th  style={{ padding:'10px' }} scope="row">2</th>
-                      <td style={{ padding:'10px' }}>Mark</td>
-                      <td style={{ padding:'10px' }}>Otto</td>
-                      <td style={{ padding:'10px' }}>@mdo</td>
-                      <td style={{ padding:'10px' }}>@mdo</td>
-                      <td style={{ padding:'10px' }}>@mdo</td>
-                      <td style={{ padding:'10px' }}>@mdo</td>
-                      <td style={{ padding:'10px' }}>@mdo</td>
-                    </tr>
-                  
+                    {submittedData.map((data, index) => (
+                      <tr key={index}>
+                        <th style={{ padding: "10px" }} scope="row">
+                          {index + 1}
+                        </th>
+                        <td style={{ padding: "10px" }}>{data.degree}</td>
+                        <td style={{ padding: "10px" }}>{data.specialization}</td>
+                        <td style={{ padding: "10px" }}>
+                          {dayjs(data.yop).format("YYYY")}
+                        </td>
+                        <td style={{ padding: "10px" }}>{data.NameofInstitute}</td>
+                        <td style={{ padding: "10px" }}>{data.CGPA_Rank_Divn_Equivalent}</td>
+                        <td style={{ padding: "10px" }}>{data.uploadedFileName}</td>
+                        <td style={{ padding: "10px" }}>
+                          <DeleteIcon 
+                            style={{color:'red'}}
+                            onClick={() => handleDelete(index)}
+                          />
+                        </td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
                 <div className="d-flex justify-content-end p-2">
                   <Grid item xs={12} sm={12}>
-                    <Button variant="outlined" className="mx-1">
+                    <Button onClick={handleBackClick} variant="outlined" className="mx-1">
                       Back
                     </Button>
-                    <Button variant="contained" color="primary" type="submit">
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      type="button"
+                      disabled={!isDataSubmitted} // Disable button if no data is submitted
+                      onClick={handleSaveAndNext}
+                    >
                       Save & Next
                     </Button>
                   </Grid>

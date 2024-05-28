@@ -1,6 +1,7 @@
 import './App.css';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import React, { Suspense } from 'react';
+import { useSelector } from 'react-redux';
 
 
 // Lazy load the Login component
@@ -18,8 +19,9 @@ const Loading = () => (
     <img src='../../loading1.gif' alt="Loading..." />
   </div>
 );
-function App() {
 
+function App() {
+  const counter = useSelector((state)=>console.log(state))
 
   return (
     <>
