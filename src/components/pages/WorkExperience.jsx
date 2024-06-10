@@ -16,7 +16,6 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
 import "../pages/allPages.css";
-import { styled } from "@mui/material/styles";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useNavigate } from "react-router-dom";
@@ -24,6 +23,14 @@ import { useDispatch } from "react-redux";
 import { decrement, increment } from "../../radux/slices/UpdateStagesStepper";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import Table from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableCell from "@mui/material/TableCell";
+import TableContainer from "@mui/material/TableContainer";
+import TableHead from "@mui/material/TableHead";
+import TableRow from "@mui/material/TableRow";
+import Paper from "@mui/material/Paper";
+
 const initialValues = {
   designation: "",
   employerName: "",
@@ -36,7 +43,6 @@ const initialValues = {
   uploadedFileName: "",
 };
 
-// Validation schema for form validation
 const validationSchema = Yup.object({
   designation: Yup.string().required("Required"),
   employerName: Yup.string().required("Required"),
@@ -47,52 +53,47 @@ const validationSchema = Yup.object({
 });
 
 const WorkExperience = () => {
-  const Navigate = useNavigate();
+  const navigate = useNavigate();
   const dispatch = useDispatch();
-  // State to hold the data for the table
   const [tableData, setTableData] = useState([]);
   const [uploadedFileName, setUploadedFileName] = useState("");
-  const [isDataSubmitted , setIsDataSubmitted] = useState(false)
+  const [isDataSubmitted, setIsDataSubmitted] = useState(false);
 
-  // Function to handle file change
   const handleFileChange = (event) => {
     const file = event.target.files[0];
     setUploadedFileName(file ? file.name : "");
   };
 
-  // Function to handle form submission
   const handleSubmit = (values, { resetForm }) => {
-    setTableData((prevData) => [...prevData, values]);
-    setIsDataSubmitted(true); // Data is submitted, so set the flag to true
+    setTableData((prevData) => [...prevData, { ...values, uploadedFileName }]);
+    setIsDataSubmitted(true);
     resetForm();
+    setUploadedFileName("");
   };
 
-  // Function to delete table data
   const handleDelete = (index) => {
     setTableData((prevData) => prevData.filter((_, i) => i !== index));
     setIsDataSubmitted(tableData.length > 1);
   };
+
   const handleSaveAndNext = () => {
-    // Here you would save the table data, either to a global state or a database
-    // Then navigate to the next screen
     toast.success("Data Save Successfully", {
       position: "top-right",
     });
     dispatch(increment());
     setTimeout(() => {
-      Navigate("/upload-document");
-    }, 5000); // Replace 'NextScreen' with the name of your next screen
+      navigate("/upload-document");
+    }, 5000);
   };
 
   const handleBack = () => {
-    // Navigate to the previous screen
-    dispatch(decrement())
-    Navigate("/academic-qualification");
+    dispatch(decrement());
+    navigate("/academic-qualification");
   };
 
   return (
     <>
-    <ToastContainer/>
+      <ToastContainer />
       <Header />
       <Progress />
       <section className="py-4" style={{ background: "#f0f2f8" }}>
@@ -112,9 +113,7 @@ const WorkExperience = () => {
                   >
                     {({ touched, errors }) => (
                       <Form>
-                        {/* Form fields */}
                         <Grid container spacing={3} className="mb-3">
-                          {/* Designation field */}
                           <Grid item xs={12} sm={4}>
                             <Field
                               as={TextField}
@@ -132,7 +131,6 @@ const WorkExperience = () => {
                               }
                             />
                           </Grid>
-                          {/* Employer Name field */}
                           <Grid item xs={12} sm={4}>
                             <Field
                               as={TextField}
@@ -151,7 +149,6 @@ const WorkExperience = () => {
                               }
                             />
                           </Grid>
-                          {/* Address of the Employer field */}
                           <Grid item xs={12} sm={4}>
                             <Field
                               as={TextField}
@@ -171,7 +168,6 @@ const WorkExperience = () => {
                               }
                             />
                           </Grid>
-                          {/* Payscale/Payband field */}
                           <Grid item xs={12} sm={4}>
                             <Field
                               as={TextField}
@@ -191,7 +187,6 @@ const WorkExperience = () => {
                               }
                             />
                           </Grid>
-                          {/* Gross Salary field */}
                           <Grid item xs={12} sm={4}>
                             <Field
                               as={TextField}
@@ -210,7 +205,6 @@ const WorkExperience = () => {
                               }
                             />
                           </Grid>
-                          {/* Nature of Work/Roles & Responsibilities field */}
                           <Grid item xs={12} sm={4}>
                             <Field
                               as={TextField}
@@ -230,7 +224,6 @@ const WorkExperience = () => {
                               }
                             />
                           </Grid>
-                          {/* Working From date field */}
                           <Grid item xs={12} sm={4}>
                             <LocalizationProvider dateAdapter={AdapterDayjs}>
                               <DemoContainer components={["DatePicker"]}>
@@ -275,7 +268,6 @@ const WorkExperience = () => {
                               className="error text-danger"
                             />
                           </Grid>
-                          {/* Working To date field */}
                           <Grid item xs={12} sm={4}>
                             <LocalizationProvider dateAdapter={AdapterDayjs}>
                               <DemoContainer components={["DatePicker"]}>
@@ -317,11 +309,9 @@ const WorkExperience = () => {
                               className="error text-danger"
                             />
                           </Grid>
-                          {/* File Upload section */}
                           <Grid item xs={12} sm={6}>
                             <Typography variant="body1">
-                              Upload Proof (jpeg,pdf,png,jpg)* Filename must not
-                              contain any special character
+                              Upload Proof (jpeg, pdf, png, jpg)*
                             </Typography>
                           </Grid>
                           <Grid item xs={12} sm={3}>
@@ -338,18 +328,12 @@ const WorkExperience = () => {
                                 onChange={handleFileChange}
                                 name="fileupload"
                               />
-                              <ErrorMessage
-                                name="uploadfilename"
-                                component="div"
-                                className="error text-danger"
-                              />
                             </Button>
                           </Grid>
-                          <Grid item xs={12} sm={2}>
+                          <Grid item xs={12} sm={3}>
                             <Typography>{uploadedFileName}</Typography>
                           </Grid>
                         </Grid>
-                        {/* Submit button */}
                         <div className="d-flex justify-content-end">
                           <Grid item xs={12} sm={12}>
                             <Button
@@ -370,7 +354,6 @@ const WorkExperience = () => {
           </div>
         </div>
 
-        {/* Display filled data in table */}
         <div className="mb-3 container-fluid">
           <div className="row justify-content-center">
             <div className="col-md-11">
@@ -380,49 +363,43 @@ const WorkExperience = () => {
                     Work Experience
                   </Typography>
                 </CardContent>
-                <table className="table">
-                  <thead className="table-light">
-                    <tr>
-                      <th scope="col">#</th>
-                      <th scope="col">Designation</th>
-                      <th scope="col">Name of the Employer/ Organization</th>
-                      <th scope="col">Address of the Employer/ Organization</th>
-                      <th scope="col">Pay scale/ Pay band</th>
-                      <th scope="col">
-                        Nature of work/Roles & Responsibilities
-                      </th>
-                      <th scope="col">Upload – Degree/Certificate/Marksheet</th>
-                      <th scope="col">Delete</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {tableData.map((data, index) => (
-                      <tr key={index}>
-                        <th style={{ padding: "10px" }} scope="row">
-                          {index + 1}
-                        </th>
-                        <td style={{ padding: "10px" }}>{data.designation}</td>
-                        <td style={{ padding: "10px" }}>{data.employerName}</td>
-                        <td style={{ padding: "10px" }}>
-                          {data.addressOfTheEmployer}
-                        </td>
-                        <td style={{ padding: "10px" }}>
-                          {data.PayscalePayband}
-                        </td>
-                        <td style={{ padding: "10px" }}>
-                          {data.NatureofworkRoles}
-                        </td>
-                        <td style={{ padding: "10px" }}>{uploadedFileName}</td>
-                        <td style={{ padding: "10px" }}>
-                          <DeleteIcon
-                            style={{ color: "red", cursor: "pointer" }}
-                            onClick={() => handleDelete(index)}
-                          />
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                <TableContainer component={Paper}>
+                  <Table sx={{ minWidth: 650 }} aria-label="simple table">
+                    <TableHead style={{background:'#eee'}}>
+                      <TableRow>
+                        <TableCell style={{fontWeight:'600'}}>#</TableCell>
+                        <TableCell style={{fontWeight:'600'}}>Designation</TableCell>
+                        <TableCell style={{fontWeight:'600'}}>Name of the Employer/Organization</TableCell>
+                        <TableCell style={{fontWeight:'600'}}>Address of the Employer/Organization</TableCell>
+                        <TableCell style={{fontWeight:'600'}}>Pay scale/Pay band</TableCell>
+                        <TableCell style={{fontWeight:'600'}}>Nature of work/Roles & Responsibilities</TableCell>
+                        <TableCell style={{fontWeight:'600'}}>Upload – Degree/Certificate/Marksheet</TableCell>
+                        <TableCell style={{fontWeight:'600'}}>Delete</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {tableData.map((data, index) => (
+                        <TableRow key={index}>
+                          <TableCell component="th" scope="row">
+                            {index + 1}
+                          </TableCell>
+                          <TableCell>{data.designation}</TableCell>
+                          <TableCell>{data.employerName}</TableCell>
+                          <TableCell>{data.addressOfTheEmployer}</TableCell>
+                          <TableCell>{data.PayscalePayband}</TableCell>
+                          <TableCell>{data.NatureofworkRoles}</TableCell>
+                          <TableCell>{data.uploadedFileName}</TableCell>
+                          <TableCell>
+                            <DeleteIcon
+                              style={{ color: "red", cursor: "pointer" }}
+                              onClick={() => handleDelete(index)}
+                            />
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
                 <div className="d-flex justify-content-end p-2">
                   <Grid item xs={12} sm={12}>
                     <Button

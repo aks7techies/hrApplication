@@ -4,6 +4,14 @@ import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import Header from "../../layouts/header/Header";
 import Progress from "../../layouts/stepper/Progress";
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import Paper from '@mui/material/Paper';
+
 import {
   Card,
   CardContent,
@@ -58,7 +66,7 @@ const VisuallyHiddenInput = styled("input")({
 
 const AcademicQualifications = () => {
   const [submittedData, setSubmittedData] = useState([]);
-  const [isDataSubmitted, setIsDataSubmitted] = useState(false); // State to track whether data is submitted
+  const [isDataSubmitted, setIsDataSubmitted] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
@@ -68,26 +76,26 @@ const AcademicQualifications = () => {
   };
 
   const handleSubmit = (values, { resetForm }) => {
-    console.log(values);
+    setSubmittedData((prevData) => [...prevData, values]);
+    resetForm();
+    setIsDataSubmitted(true);
     toast.success("Qualification Added Successfully", {
       position: "top-right",
     });
-    setSubmittedData((prevData) => [...prevData, values]);
-    resetForm();
-    setIsDataSubmitted(true); // Data is submitted, so set the flag to true
   };
 
   const handleDelete = (index) => {
-    setSubmittedData(submittedData.filter((_, i) => i !== index));
+    const updatedData = submittedData.filter((_, i) => i !== index);
+    setSubmittedData(updatedData);
+    setIsDataSubmitted(updatedData.length > 0);
     toast.success("Data Deleted Successfully", {
       position: "top-right",
     });
-    setIsDataSubmitted(submittedData.length > 1); // Check if there is still data after deletion
   };
 
   const handleSaveAndNext = () => {
     dispatch(increment());
-    navigate("/work-Experience"); // Replace "/next-page" with your actual next page route
+    navigate("/work-Experience");
   };
 
   const handleBackClick = () => {
@@ -222,7 +230,7 @@ const AcademicQualifications = () => {
                           </Grid>
                           <Grid item xs={12} sm={6}>
                             <Typography variant="body1">
-                              Upload – Degree/Certificate/Marksheet (pdf, jpg, jpeg, png)
+                              Upload - Degree/Certificate/Marksheet (pdf, jpg, jpeg, png)
                             </Typography>
                           </Grid>
                           <Grid item xs={12} sm={3}>
@@ -279,43 +287,47 @@ const AcademicQualifications = () => {
                     Academic Qualifications
                   </Typography>
                 </CardContent>
-                <table className="table">
-                  <thead className="table-light">
-                    <tr>
-                      <th scope="col">#</th>
-                      <th scope="col">Degree</th>
-                      <th scope="col">Specialization</th>
-                      <th scope="col">Year of Passing</th>
-                      <th scope="col">Name Of Institute</th>
-                      <th scope="col">CGPA/ Rank/ Divn/ Equivalent</th>
-                      <th scope="col">Upload – Degree/Certificate/Marksheet</th>
-                      <th scope="col">Delete</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {submittedData.map((data, index) => (
-                      <tr key={index}>
-                        <th style={{ padding: "10px" }} scope="row">
-                          {index + 1}
-                        </th>
-                        <td style={{ padding: "10px" }}>{data.degree}</td>
-                        <td style={{ padding: "10px" }}>{data.specialization}</td>
-                        <td style={{ padding: "10px" }}>
-                          {dayjs(data.yop).format("YYYY")}
-                        </td>
-                        <td style={{ padding: "10px" }}>{data.NameofInstitute}</td>
-                        <td style={{ padding: "10px" }}>{data.CGPA_Rank_Divn_Equivalent}</td>
-                        <td style={{ padding: "10px" }}>{data.uploadedFileName}</td>
-                        <td style={{ padding: "10px" }}>
-                          <DeleteIcon 
-                            style={{color:'red'}}
-                            onClick={() => handleDelete(index)}
-                          />
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                {submittedData.length > 0 && (
+                  <TableContainer component={Paper}>
+                    <Table sx={{ minWidth: 650 }} aria-label="simple table">
+                      <TableHead style={{background:'#eee'}}>
+                        <TableRow>
+                          <TableCell style={{fontWeight:'600'}}>#</TableCell>
+                          <TableCell align="center" style={{fontWeight:'600'}}>Degree</TableCell>
+                          <TableCell align="center" style={{fontWeight:'600'}}>Specialization</TableCell>
+                          <TableCell align="center" style={{fontWeight:'600'}}>Year of Passing</TableCell>
+                          <TableCell align="center" style={{fontWeight:'600'}}>Name Of Institute</TableCell>
+                          <TableCell align="center" style={{fontWeight:'600'}}>CGPA/ Rank/ Divn/ Equivalent</TableCell>
+                          <TableCell align="center" style={{fontWeight:'600'}}>Uploaded File</TableCell>
+                          <TableCell align="center" style={{fontWeight:'600'}}>Delete</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {submittedData.map((data, index) => (
+                          <TableRow key={index}>
+                            <TableCell>{index + 1}</TableCell>
+                            <TableCell align="center">{data.degree}</TableCell>
+                            <TableCell align="center">{data.specialization}</TableCell>
+                            <TableCell align="center">{dayjs(data.yop).format('YYYY')}</TableCell>
+                            <TableCell align="center">{data.NameofInstitute}</TableCell>
+                            <TableCell align="center">{data.CGPA_Rank_Divn_Equivalent}</TableCell>
+                            <TableCell align="center">{data.uploadedFileName}</TableCell>
+                            <TableCell align="center">
+                              <Button
+                                variant="outlined"
+                                color="error"
+                                startIcon={<DeleteIcon />}
+                                onClick={() => handleDelete(index)}
+                              >
+                                Delete
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                )}
                 <div className="d-flex justify-content-end p-2">
                   <Grid item xs={12} sm={12}>
                     <Button onClick={handleBackClick} variant="outlined" className="mx-1">
@@ -325,7 +337,7 @@ const AcademicQualifications = () => {
                       variant="contained"
                       color="primary"
                       type="button"
-                      disabled={!isDataSubmitted} // Disable button if no data is submitted
+                      disabled={!isDataSubmitted}
                       onClick={handleSaveAndNext}
                     >
                       Save & Next

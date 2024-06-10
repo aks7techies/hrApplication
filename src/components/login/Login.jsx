@@ -2,29 +2,59 @@ import React from "react";
 import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
 import "./login.css";
+import axios from 'axios';
 import { TextField, Button } from "@mui/material";
-import { Link } from "react-router-dom";
+import { Link,useNavigate } from "react-router-dom";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
-const initialValues = {
-  email: "",
-  password: "",
-};
-
-const validationSchema = Yup.object({
-  email: Yup.string().email("Invalid email address").required("Email ID is Required"),
-  password: Yup.string()
-    .min(6, "Password must be at least 6 characters")
-    .required("Password is Required"),
-});
-
-const handleSubmit = (values) => {
-  // Handle form submission
-  console.log(values);
-};
 
 const Login = () => {
+ const redirect = useNavigate();
+  const initialValues = {
+    email: "",
+    password: "",
+  };
+  
+  const validationSchema = Yup.object({
+    email: Yup.string().email("Invalid email address").required("Email ID is Required"),
+    password: Yup.string()
+      .min(6, "Password must be at least 6 characters")
+      .required("Password is Required"),
+  });
+  
+  const handleSubmit = async(values) => {
+    // Handle form submission
+   await axios.post('http://127.0.0.1:8000/api/login', {
+      email: values.email,
+      password: values.password,
+    })
+    .then(function (response) {
+      if(response.status===200){
+        sessionStorage.setItem('accessToken',response.data.access_token);
+        sessionStorage.setItem('username',response.data.data.email);
+        sessionStorage.setItem('userId',response.data.data.id);
+        toast.success('Login Successfully.',{
+          position:"top-right"
+        });
+       
+        setTimeout(()=>{
+         redirect('./form-fill');
+       },1000)
+        
+  
+      }
+    })
+    .catch(function (error) {
+      console.log(error);
+    });
+  
+  };
+
+
   return (
     <>
+     <ToastContainer />
       <section>
         <div className="main-Login">
           <div className="login-card">

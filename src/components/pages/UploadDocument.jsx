@@ -40,7 +40,7 @@ const UploadDocument = () => {
       Navigate("/declaration");
     }, 5000);
   };
-const handleBackClick = () =>{
+const handleBackClick = () => {
   dispatch(decrement());
   Navigate("/work-experience");
 }

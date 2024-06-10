@@ -1,5 +1,6 @@
 import { configureStore } from '@reduxjs/toolkit';
 import counterReducer from './slices/UpdateStagesStepper';
+import multistepFormReducer from './slices/MultistepSlice';
 import { persistReducer, persistStore } from 'redux-persist';
 import storage from 'redux-persist/lib/storage'; // defaults to localStorage for web
 
@@ -9,11 +10,12 @@ const persistConfig = {
   storage,
 };
 
-const persistedReducer = persistReducer(persistConfig, counterReducer);
+const persistedReducer = persistReducer(persistConfig, counterReducer , multistepFormReducer);
 
 export const store = configureStore({
   reducer: {
     counter: persistedReducer,
+    multistepForm: persistedReducer,
   },
 });
 
